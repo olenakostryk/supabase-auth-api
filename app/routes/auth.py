@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
+from app.dependencies import get_current_user
 from app.schemas import AuthRequest
 from app.supabase_client import supabase
 
@@ -52,3 +53,15 @@ def login(data: AuthRequest):
         "access_token": response.session.access_token,
         "refresh_token": response.session.refresh_token
     }
+    
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(user=Depends(get_current_user)):
+    try:
+        supabase.auth.sign_out()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Logout failed"
+        )
